@@ -27,10 +27,10 @@ body {
     color: var(--color-light);
     background-color: black;
     padding: 2rem;
-    background-image: url('https://img.freepik.com/free-vector/gradient-abstract-technology-background_23-2149209063.jpg?semt=ais_hybrid'); /* Add your image path here */
+    background-logoicon: url('https://img.freepik.com/free-vector/gradient-abstract-technology-background_23-2149209063.jpg?semt=ais_hybrid'); /* Add your logoicon path here */
     background-size: cover; /* This will cover the entire element */
-    background-position: center; /* Center the image */
-    background-repeat: no-repeat; /* Prevent the image from repeating */
+    background-position: center; /* Center the logoicon */
+    background-repeat: no-repeat; /* Prevent the logoicon from repeating */
   }
   
 .wrapper {
