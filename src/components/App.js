@@ -13,18 +13,46 @@ import Footer from "./Footer";
 import Timer from "./Timer";
 import "../index.css";
 
-const SECS_PER_QUESTION = 5;
+const SECS_PER_QUESTION = 50; // 50 seconds for each question
 
-// We need to define the intialState in order to use useReduce Hook.
+// Define your IEEE-related questions directly in the code
+const staticQuestions = [
+  {
+    question: "What year was IEEE founded?",
+    options: ["1875", "1912", "1963", "1987"],
+    correctOption: 2,
+    points: 10,
+  },
+  {
+    question: "Who was the first president of IEEE after the merger of AIEE and IRE?",
+    options: ["Thomas Edison", "Ernst Weber", "Nikola Tesla", "Alexander Graham Bell"],
+    correctOption: 1,
+    points: 10,
+  },
+  {
+    question: "What does the acronym IEEE stand for?",
+    options: [
+      "International Electrotechnical Engineering Establishment",
+      "Institute of Electrical and Electronics Engineers",
+      "International Energy and Engineering Enterprise",
+      "Institution of Engineers in Electronics and Electrics",
+    ],
+    correctOption: 1,
+    points: 10,
+  },
+  // Add remaining questions here...
+];
+
+// Initial state setup
 const initialState = {
   questions: [],
-  // 'loading', 'error', 'ready', 'active', 'finished'
-  status: "loading",
+  status: "loading", // 'loading', 'error', 'ready', 'active', 'finished'
   index: 0,
   answer: null,
   points: 0,
   highscore: 0,
-  secondsRemaining: null,
+  secondsRemaining: SECS_PER_QUESTION, // Timer for each question
+  questionAnswered: false, // Prevent answering after time is up
 };
 
 function reducer(state, action) {
@@ -35,20 +63,16 @@ function reducer(state, action) {
         questions: action.payload,
         status: "ready",
       };
-    case "dataFailed":
-      return {
-        ...state,
-        status: "error",
-      };
     case "start":
       return {
         ...state,
         status: "active",
-        secondsRemaining: state.questions.length * SECS_PER_QUESTION,
+        secondsRemaining: SECS_PER_QUESTION, // Set the timer for the first question
+        questionAnswered: false, // Reset answer flag for the new question
       };
     case "newAnswer":
+      if (state.questionAnswered || state.secondsRemaining <= 0) return state; // Prevent answering after time is up
       const question = state.questions.at(state.index);
-
       return {
         ...state,
         answer: action.payload,
@@ -56,9 +80,16 @@ function reducer(state, action) {
           action.payload === question.correctOption
             ? state.points + question.points
             : state.points,
+        questionAnswered: true, // Mark the question as answered
       };
     case "nextQuestion":
-      return { ...state, index: state.index + 1, answer: null };
+      return {
+        ...state,
+        index: state.index + 1,
+        answer: null,
+        secondsRemaining: SECS_PER_QUESTION, // Reset the timer for the next question
+        questionAnswered: false, // Reset answer flag
+      };
     case "finish":
       return {
         ...state,
@@ -68,28 +99,20 @@ function reducer(state, action) {
       };
     case "restart":
       return { ...initialState, questions: state.questions, status: "ready" };
-
     case "tick":
       return {
         ...state,
-        secondsRemaining: state.secondsRemaining - 1,
-        highscore:
-          state.secondsRemaining === 0
-            ? state.points > state.highscore
-              ? state.points
-              : state.highscore
-            : state.highscore,
-        status: state.secondsRemaining === 0 ? "finished" : state.status,
+        secondsRemaining:
+          state.secondsRemaining > 0 ? state.secondsRemaining - 1 : 0, // Prevent negative timer
       };
-
     default:
-      throw new Error("Action unkonwn");
+      throw new Error("Unknown action type");
   }
 }
 
 export default function App() {
   const [
-    { questions, status, index, answer, points, highscore, secondsRemaining },
+    { questions, status, index, answer, points, highscore, secondsRemaining, questionAnswered },
     dispatch,
   ] = useReducer(reducer, initialState);
 
@@ -99,16 +122,26 @@ export default function App() {
     0
   );
 
+  // Timer effect
+  useEffect(() => {
+    if (status === "active" && secondsRemaining > 0) {
+      const timerId = setInterval(() => {
+        dispatch({ type: "tick" });
+      }, 1000);
+      return () => clearInterval(timerId); // Cleanup the interval
+    } else if (secondsRemaining === 0 && status === "active") {
+      setTimeout(() => {
+        dispatch({ type: "nextQuestion" });
+      }, 2000); // Automatically move to the next question after 2 seconds
+    }
+  }, [status, secondsRemaining]);
+
   useEffect(function () {
-    fetch("https://vinayak9669.github.io/React_quiz_api/questions.json")
-      .then((res) => res.json())
-      .then((data) =>
-        dispatch({
-          type: "dataReceived",
-          payload: data["questions"],
-        })
-      )
-      .catch((err) => dispatch({ type: "dataFailed" }));
+    // Directly dispatch static questions instead of fetching from API
+    dispatch({
+      type: "dataReceived",
+      payload: staticQuestions,
+    });
   }, []);
 
   return (
@@ -119,10 +152,9 @@ export default function App() {
 
           <Main>
             {status === "loading" && <Loader />}
-            {status === "error" && <Error />}
             {status === "ready" && (
               <StartScreen numQuestions={numQuestions} dispatch={dispatch} />
-            )}{" "}
+            )}
             {status === "active" && (
               <>
                 <Progress
@@ -136,6 +168,7 @@ export default function App() {
                   question={questions[index]}
                   dispatch={dispatch}
                   answer={answer}
+                  questionAnswered={questionAnswered || secondsRemaining === 0} // Disable interaction if time is up
                 />
                 <Footer>
                   <Timer

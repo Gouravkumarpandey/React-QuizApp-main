@@ -22,11 +22,17 @@ html {
     Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 }
 body {
-  min-height: 100vh;
-  color: var(--color-light);
-  background-color: var(--color-darkest);
-  padding: 2rem;
-}
+  
+    min-height: 100vh;
+    color: var(--color-light);
+    background-color: black;
+    padding: 2rem;
+    background-image: url('https://img.freepik.com/free-vector/gradient-abstract-technology-background_23-2149209063.jpg?semt=ais_hybrid'); /* Add your image path here */
+    background-size: cover; /* This will cover the entire element */
+    background-position: center; /* Center the image */
+    background-repeat: no-repeat; /* Prevent the image from repeating */
+  }
+  
 .wrapper {
   position: absolute;
   top: 50%;
@@ -71,9 +77,16 @@ body {
 }
 
 img {
-  width: calc(95vmin - 80vmin);
-  border-radius: 50%;
-}
+  
+    width: 100px;
+    height: 100px;
+    background-color: whitesmoke;
+    border-radius: 50%;
+  }
+  
+  /* width: calc(95vmin - 80vmin);
+  border-radius: 95%;
+} */
 h1 {
   font-family: "Codystar";
   font-size: calc(100vmin - 93vmin);
